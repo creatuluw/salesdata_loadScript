@@ -301,7 +301,7 @@ CountryMeta:
 LOAD
     "ISO-3166alpha2" as CountryRegionCode,
     "ISO-3166alpha3" as "3ChrCode",
-    "Area in km²",
+    //"Area in km²",
     Population,
     Continent,
     Country as CountryName
