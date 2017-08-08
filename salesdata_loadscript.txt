@@ -306,7 +306,7 @@ LOAD
     Continent,
     Country as CountryName
 FROM [http://www.geonames.org/countries/]
-(html, codepage is 1252, embedded labels, table is @2);
+(html, utf8, embedded labels, table is @2);
 
 WorldKML:
 LOAD
