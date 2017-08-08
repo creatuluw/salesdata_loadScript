@@ -1,0 +1,325 @@
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep='.';
+SET MoneyDecimalSep=',';
+SET MoneyFormat='€ #.##0,00;€ -#.##0,00';
+SET TimeFormat='hh:mm:ss';
+SET DateFormat='MM/DD/YYYY';
+SET TimestampFormat='MM/DD/YYYY h:mm:ss[.fff]';
+SET MonthNames='jan;feb;mrt;apr;mei;jun;jul;aug;sep;okt;nov;dec';
+SET DayNames='ma;di;wo;do;vr;za;zo';
+SET LongMonthNames='januari;februari;maart;april;mei;juni;juli;augustus;september;oktober;november;december';
+SET LongDayNames='maandag;dinsdag;woensdag;donderdag;vrijdag;zaterdag;zondag';
+SET FirstWeekDay=0;
+SET BrokenWeeks=0;
+SET ReferenceDay=4;
+SET FirstMonthOfYear=1;
+SET CollationLocale='nl-NL';
+
+// Variables
+
+SET vTest = '1000';
+SET vTest2 = '=sum(SalesAmount)';
+SET vCountCustomers = '=count(distinct CustomerID)';
+SET vChartColor = 'rgb(28,163,204)';
+
+SET vDiscount = '0';
+SET vDirectCostSavings = '0';
+SET vFixedCostSavings = '0';
+
+
+DistributeByDimension:
+LOAD * INLINE [
+DimID, Dimension
+1, ProductCategoryName
+2, Country
+3, ProductName
+4, YearMonth
+5, ProductSubcategoryName
+];
+
+
+OrderDetail:
+LOAD
+    SalesOrderID,
+    SalesOrderDetailID,
+    CarrierTrackingNumber,
+    OrderQty,
+    ProductID,
+    SpecialOfferID,
+    UnitPrice,
+    UnitPriceDiscount,
+    SalesAmount,
+    MarginAmount,
+    CostAmount
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/Order%20Detail.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+OrderHeader:
+LOAD
+    SalesOrderID,
+    RevisionNumber,
+    DueDateOriginal,
+    ShipDateOriginal,
+    Status,
+    OnlineOrderFlag,
+    SalesOrderNumber,
+    PurchaseOrderNumber,
+    AccountNumber,
+    CustomerID,
+    ContactID,
+    SalesPersonID,
+    TerritoryID,
+    BillToAddressID,
+    ShipToAddressID,
+    ShipMethodID,
+    CreditCardID,
+    CreditCardApprovalCode,
+    CurrencyRateID,
+    SubTotal,
+    TaxAmt,
+    Freight,
+    TotalDue,
+    "Comment",
+    OrderDate,
+    DueDate,
+    ShipDate
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/OrderHeader.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+Products:
+LOAD
+    ProductID,
+    ProductName,
+    Product,
+    ProductNumber,
+    MakeFlag,
+    FinishedGoodsFlag,
+    "Color",
+    SafetyStockLevel,
+    ReorderPoint,
+    StandardCost,
+    ListPrice,
+    Size,
+    SizeUnitMeasureCode,
+    WeightUnitMeasureCode,
+    Weight,
+    DaysToManufacture,
+    ProductLine,
+    "Class",
+    Style,
+    ProductSubcategoryID,
+    ProductModelID,
+    SellStartDate,
+    SellEndDate,
+    DiscontinuedDate
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/Product.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+ProductCategory:
+LOAD
+    ProductCategoryID,
+    ProductCategoryName
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/ProductCategory.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+ProductSubCategory:
+LOAD
+    ProductSubcategoryID,
+    ProductSubcategoryName,
+    ProductCategoryID
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/ProductSubCategory.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+Customer:
+LOAD
+    CustomerID,
+    CustomerName,
+    Customer,
+    Phone,
+    EmailAddress,
+    EmailPromotion,
+    Title
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/Customer.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+CustomerType:
+LOAD
+    CustomerID,
+    Channel
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/Customer%20Type.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+MapData:
+LOAD
+    GeoKey,
+    Latitude,
+    Longitude,
+    GeoMakePoint(Latitude, Longitude) as GeoPoint
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/MapData.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+Address:
+LOAD
+    GeoKey,
+    BillToAddressID,
+    AddressLine1,
+    AddressLine2,
+    City,
+    StateProvinceID,
+    PostalCode,
+    CountryRegionCode,
+    "State / Province",
+    Country
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/BillToAddress.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+IndividualDemographics:
+LOAD
+    CustomerID,
+    TotalPurchaseYTD,
+    floor((today() - date(floor(replace(DateFirstPurchase,' AM','')),'MM/DD/YYYY')) / 365) as CustomerTenure,
+    date(floor(replace(DateFirstPurchase,' AM','')),'MM/DD/YYYY') as DateFirstPurchase,
+    BirthDate,
+    MaritalStatus,
+    YearlyIncome,
+    Gender,
+    "Have Child(ren)",
+    TotalChildren,
+    NumberChildrenAtHome,
+    Education,
+    Occupation,
+    HomeOwnerFlag,
+    NumberCarsOwned
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/IndividualDemographics.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+Calendar:
+LOAD
+    OrderDate,
+    Year,
+    "Month",
+    YearMonth,
+    Quarter,
+    YearQtr,
+    "Week",
+    day(OrderDate) as Day
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/Calendar.txt]
+(txt, utf8, embedded labels, delimiter is ';', msq);
+
+
+ProductBasket:
+LOAD
+    ProductID as pID,
+    ProductName as ProductDesc,
+    ProductSubcategoryID as ProductSubcategory_ID
+Resident Products;
+
+LEFT JOIN 
+LOAD
+	ProductSubcategoryID as ProductSubcategory_ID,
+    ProductCategoryID as ProductCategory_ID
+Resident ProductSubCategory;
+
+INNER JOIN
+LOAD 
+	SalesOrderID,
+	ProductID as pID,
+	floor(sum(SalesAmount)) as Revenue
+Resident OrderDetail
+//Where SalesOrderID = 69944
+Group by
+	SalesOrderID,
+	ProductID
+Order By 
+	SalesOrderID
+;
+
+LEFT JOIN
+LOAD 
+	SalesOrderID,
+	ProductID as withID
+Resident OrderDetail
+//Where SalesOrderID = 69944
+;
+
+OrderBaskets:
+NoConcatenate
+LOAD 
+	withID &':'& pID as ReversedCombi_ID,
+	pID &':'& withID as ProductCombi_ID,
+* Resident ProductBasket
+Where pID <> withID
+//and match(pID, 923, 934)
+//and match(withID, 923, 934)
+;
+
+
+BasketAnalysis:
+LOAD DISTINCT
+	ProductCombi_ID as cID,
+	pID as ProductID, 
+    withID as pID,
+    count(ProductCombi_ID) as CoSoldTotal
+Resident OrderBaskets
+Group by
+	ReversedCombi_ID,
+	ProductCombi_ID,
+	pID, 
+    withID
+;
+
+BasketProducts:
+LOAD DISTINCT
+	withID as wID,
+	pID,
+    ProductDesc as ProductDescription,
+    ProductCategory_ID as CatID,
+    sum(Revenue) as ProductSales
+Resident ProductBasket
+Group by
+	withID,
+	pID,
+    ProductDesc,
+    ProductCategory_ID
+;
+
+Drop Tables ProductBasket, OrderBaskets;
+
+
+CountryMeta:
+LOAD
+    "ISO-3166alpha2" as CountryRegionCode,
+    "ISO-3166alpha3" as "3ChrCode",
+    "Area in km²",
+    Population,
+    Continent,
+    Country as CountryName
+FROM [http://www.geonames.org/countries/]
+(html, codepage is 1252, embedded labels, table is @2);
+
+WorldKML:
+LOAD
+    world.Name as "3ChrCode",
+    world.Area as CountryArea
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/world.kml]
+(kml, Table is [World.shp/Features]);
+
+Continents:
+LOAD
+    Continent,
+    ContinentName
+FROM [https://raw.githubusercontent.com/creatuluw/salesdata/master/Continents.txt]
+(txt, codepage is 1252, embedded labels, delimiter is ',', msq);
+
+
